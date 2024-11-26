@@ -1,9 +1,10 @@
 import time
 from fastapi import FastAPI, Response
-from models import Driver, Vehicle, Task
+from Vehicle_park.app.models import Administrator, Driver, Vehicle, Task
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from psycopg2 import errors
+from Vehicle_park.app.utils import hash_password
 
 app = FastAPI()
 
@@ -60,9 +61,10 @@ async def get_unavailable_drivers():
 
 @app.post("/add/driver")
 async def add_driver(driver: Driver):
-    cursor.execute(""" INSERT INTO Driver (name, experience, phone, email) VALUES (%s, %s, %s, %s)
+    hashed_password = hash_password(driver.password)
+    cursor.execute(""" INSERT INTO Driver (name, experience, phone, email, password) VALUES (%s, %s, %s, %s, %s)
     RETURNING * """,
-    (driver.name, driver.experience, driver.phone, driver.email))
+    (driver.name, driver.experience, driver.phone, driver.email, hashed_password))
     new_driver = cursor.fetchone()
     conn.commit()
     return{"New driver added": new_driver}
@@ -273,6 +275,24 @@ async def get_administrator_by_id(id: int, response: Response):
         response.status_code = 400
         return {"error": f"Failed to fetch administrator: {str(e)}"}
 
+# Administrator -> POST
+
+@app.post("/add/administrator")
+async def add_administrator(adminstrator: Administrator, response: Response):
+    try:
+        hashed_password = hash_password(adminstrator.password)
+        cursor.execute(
+            """INSERT INTO Administrator (first_name, last_name, email, password) VALUES (%s, %s, %s, %s)
+            RETURNING *""",
+            (adminstrator.first_name, adminstrator.last_name, adminstrator.email, hashed_password)
+        )
+        new_administrator = cursor.fetchone()
+        conn.commit()
+        return {"New administrator added": new_administrator}
+    except errors.RaiseException as e:
+        conn.rollback()
+        response.status_code = 400
+        return {"error": str(e)} # Возвращаем сообщение об ошибке
 
 # Administrator -> DELETE
 
@@ -294,4 +314,3 @@ async def delete_administrator(id: int, response: Response):
         conn.rollback()
         response.status_code = 400
         return {"error": f"Failed to delete administrator: {str(e)}"}
-
