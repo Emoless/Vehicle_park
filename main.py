@@ -244,3 +244,54 @@ async def delete_vehicle(id: int, response: Response):
         conn.rollback()
         response.status_code = 400
         return {"error": str(e)}
+
+
+
+# Administrator -> GET
+
+@app.get("/administrators/all")
+async def get_all_administrators():
+    try:
+        cursor.execute("""SELECT * FROM Administrator""")
+        administrators = cursor.fetchall()
+        return {"Administrators": administrators}
+    except Exception as e:
+        return {"error": f"Failed to fetch administrators: {str(e)}"}
+
+
+@app.get("/administrators/{id}")
+async def get_administrator_by_id(id: int, response: Response):
+    try:
+        cursor.execute("""SELECT * FROM Administrator WHERE id = %s""", (id,))
+        administrator = cursor.fetchone()
+        if administrator:
+            return {"Administrator": administrator}
+        else:
+            response.status_code = 404
+            return {"error": f"Administrator with id {id} not found"}
+    except Exception as e:
+        response.status_code = 400
+        return {"error": f"Failed to fetch administrator: {str(e)}"}
+
+
+# Administrator -> DELETE
+
+@app.delete("/delete/administrator/{id}")
+async def delete_administrator(id: int, response: Response):
+    """
+    Delete an administrator by ID.
+    """
+    try:
+        cursor.execute("""DELETE FROM Administrator WHERE id = %s RETURNING *""", (id,))
+        deleted_admin = cursor.fetchone()
+        conn.commit()
+        if deleted_admin:
+            return {"Administrator deleted": deleted_admin}
+        else:
+            response.status_code = 404
+            return {"error": f"Administrator with id {id} not found"}
+    except Exception as e:
+        conn.rollback()
+        response.status_code = 400
+        return {"error": f"Failed to delete administrator: {str(e)}"}
+

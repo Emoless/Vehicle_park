@@ -147,3 +147,29 @@ WHEN (OLD.status = 'pending')
 EXECUTE FUNCTION update_driver_vehicle_on_task_delete();
 
 
+CREATE TABLE Administrator (
+    id SERIAL PRIMARY KEY, -- Уникальный идентификатор администратора
+    first_name VARCHAR(50) NOT NULL, -- Имя администратора
+    last_name VARCHAR(50) NOT NULL, -- Фамилия администратора
+    email VARCHAR(100) UNIQUE NOT NULL, -- Электронная почта администратора
+    password VARCHAR(255) NOT NULL -- Пароль администратора
+);
+
+Select * from Vehicle
+
+
+CREATE TABLE Driver (
+    id SERIAL PRIMARY KEY,  -- Автоинкрементируемый идентификатор
+    name VARCHAR(255) NOT NULL,  -- Имя водителя
+    experience INT NOT NULL,  -- Опыт работы
+    phone BIGINT NOT NULL,  -- Телефон
+    email VARCHAR(255) NOT NULL UNIQUE,  -- Электронная почта
+	password VARCHAR(255) NOT NULL, -- Пароль (зашифрованный)
+    status VARCHAR(50) NOT NULL DEFAULT 'available'  -- Статус водителя с дефолтным значением
+);
+
+
+Drop table Driver
+
+Drop table Task
+
